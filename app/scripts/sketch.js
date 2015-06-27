@@ -124,8 +124,8 @@ function mySketch(s) {
     datetime = new Date();
     secs = datetime.getSeconds() + datetime.getMilliseconds()/1000;
     mins = datetime.getMinutes() + secs/60;
-    //hrs = datetime.getHours() % 12 + mins/60;
-    hrs = 9;
+    hrs = datetime.getHours() % 12 + mins/60;
+    //hrs = 9;
 
     // keep grid somewhat mysterious
 
