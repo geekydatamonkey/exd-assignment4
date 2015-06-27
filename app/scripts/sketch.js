@@ -2,50 +2,185 @@
 /*jshint newcap: false */
 
 'use strict';
-let p5 = require('p5');
+const p5 = require('p5');
 const $ = require('jquery');
 // const _ = require('lodash');
 
+let secRadius,
+    minRadius,
+    hrRadius,
+    monthRadius,
+    faceRadius,
+    datetime,
+    hrs,
+    mins,
+    secs;
+
+let colors = {
+  sec:  '#bdd4de',
+  min: '#3f5765',
+  hr: '#2b3a42',
+  tri: [255, 83, 13, 240],
+  grid: '#3f5765',
+  bg: '#efefef'
+ // bg: '#bdd4de'
+};
 
 function mySketch(s) {
 
-  let rUnit = 50;
-  let seconds = {
-    radius: 2 * rUnit
-  };
-  let minutes = {
-    radius: 3 * rUnit
-  };
-  let hours = {
-    radius: 4 * rUnit
-  };
+  // draws a line through the origin, at angle
+  function drawLine(degrees, d) {
+    s.line(0, 0, d * Math.cos(degrees/180 * Math.PI), d * Math.sin(degrees/180 * Math.PI));
+  }
 
-  let center;
-
-  function renderTimePaths() {
+  function drawWatchFace() {
     s.push();
-    s.ellipseMode(s.RADIUS);
-    s.noFill();
-    s.stroke(244);
-    s.strokeWeight(3);
-    s.ellipse(center.x, center.y, seconds.radius, seconds.radius);
-    s.ellipse(center.x, center.y, minutes.radius, minutes.radius);
-    s.ellipse(center.x, center.y, hours.radius, hours.radius);
-
-    // sundial line
-    s.push();
-    s.strokeWeight(3);
-
-    s.line(center.x, center.y, center.x, center.y - seconds.radius);
-    s.pop();
-
-    // horizontal
-    s.push();
-    s.strokeWeight(1);
-    s.line(center.x - hours.radius, center.y, center.x + hours.radius, center.y);
-    s.pop();
+    s.fill(colors.bg);
+    s.ellipse(0,0, secRadius + 2 * monthRadius, secRadius + 2 * monthRadius);
     s.pop();
   }
+
+  function drawGrid() {
+
+    s.push();
+    s.noFill();
+    s.stroke(colors.grid);
+
+    // axes
+    s.line(-1 * s.width/2, 0, s.width/2, 0);
+    s.line(0, -1 * s.height/2, 0, s.height/2);
+
+    // minutes, seconds, and hour circles
+    s.ellipse(0, 0, secRadius, secRadius);
+    s.ellipse(0, 0, minRadius, minRadius);
+    s.ellipse(0, 0, hrRadius, hrRadius);
+
+    // line for every hour
+    s.push();
+    s.rotate(-1 * secs/60 * Math.PI * 2);
+    for (let i=0; i < 360; i += 30) {
+      drawLine(i, secRadius + 2 * monthRadius);
+    }
+    s.pop();
+
+    // dodecagon
+    s.push();
+    s.rotate(3 * secs/60 * 2 * Math.PI);
+    s.beginShape();
+    for (let i=0; i <= 360; i += 30) {
+      let x = hrRadius * Math.cos(i/180 * Math.PI);
+      let y = hrRadius * Math.sin(i/180 * Math.PI);
+      s.vertex(x,y);
+    }
+    s.endShape();
+    s.pop();
+
+    // hexagon
+    s.push();
+    s.rotate(-3 * secs/60 * 2 * Math.PI);
+    s.beginShape();
+    for (let i=0; i <= 360; i += 60) {
+      let x = hrRadius * Math.cos(i/180 * Math.PI);
+      let y = hrRadius * Math.sin(i/180 * Math.PI);
+      s.vertex(x,y);
+    }
+    s.endShape();
+    s.pop();
+    s.pop();
+
+  }
+
+  function drawMonthGrid() {
+    s.push();
+    s.stroke(colors.grid);
+    let x = (secRadius + monthRadius) * Math.cos(Math.PI/180 * 45);
+    let y = (secRadius + monthRadius) * Math.sin(Math.PI/180 * 45);
+
+    s.translate(x, y);
+    s.rotate(secs/60 * Math.PI * 2);
+    s.ellipse(0, 0, monthRadius, monthRadius);
+
+    // square inside
+    s.push();
+    s.rotate(secs/4 * Math.PI);
+    s.beginShape();
+    for (let i=0; i <= 360; i += 90) {
+      let x = monthRadius * Math.cos(i/180 * Math.PI);
+      let y = monthRadius * Math.sin(i/180 * Math.PI);
+      s.vertex(x,y);
+    }
+    s.endShape();
+    s.pop();
+
+    // lines for each month
+    for (let i=0; i < 360; i += 30) {
+      drawLine(i, monthRadius);
+    }
+    s.pop();
+
+  }
+
+  function renderTime() {
+    datetime = new Date();
+    secs = datetime.getSeconds() + datetime.getMilliseconds()/1000;
+    mins = datetime.getMinutes() + secs/60;
+    //hrs = datetime.getHours() % 12 + mins/60;
+    hrs = 9;
+
+    // keep grid somewhat mysterious
+    if (mins <= 30) {
+      colors.grid = colors.min;
+    } else {
+      colors.grid = colors.min;
+    }
+
+    renderHours();
+    renderSeconds();
+    renderMinutes();
+
+    let secX = secRadius * Math.cos(Math.PI * 2 * secs/60);
+    let secY = secRadius * Math.sin(Math.PI * 2 * secs/60);
+    let minX = minRadius * Math.cos(Math.PI * 2 * mins/60);
+    let minY = minRadius * Math.sin(Math.PI * 2 * mins/60);
+    let hrX = faceRadius * Math.cos(Math.PI * 2 * hrs/12);
+    let hrY = faceRadius * Math.sin(Math.PI * 2 * hrs/12);
+
+    s.push();
+    s.fill(colors.tri);
+    s.triangle(secX, secY, minX, minY, hrX, hrY);
+    s.pop();
+
+  }
+
+  function renderHours() {
+    s.push();
+    s.fill(colors.hr);
+    s.noStroke();
+    s.arc(0, 0, faceRadius, faceRadius, 0, hrs/12 * Math.PI * 2, s.PIE);
+    s.pop();
+
+  }
+
+  function renderMinutes() {
+    let datetime = new Date();
+    let mins = datetime.getMinutes() + datetime.getSeconds()/60;
+    s.push();
+    s.fill(colors.min);
+    s.noStroke();
+    s.arc(0, 0, minRadius, minRadius, 0, mins/60 * Math.PI * 2, s.PIE);
+    s.pop();
+  }
+
+  function renderSeconds() {
+    let datetime = new Date();
+    let secs = datetime.getSeconds() + datetime.getMilliseconds()/1000;
+    s.push();
+    s.fill(colors.sec);
+    s.noStroke();
+    s.arc(0, 0, secRadius, secRadius, 0, secs/60 * Math.PI * 2, s.PIE);
+    s.pop();
+  }
+
 
   s.setup = function (){
 
@@ -57,116 +192,33 @@ function mySketch(s) {
       $canvasWrapper.innerHeight()
     ).parent($canvasWrapper[0]);
 
-    center = {
-      x: s.width/2,
-      y: s.height/2
-    };
+    secRadius = s.height/4;
+    minRadius = 0.9 * secRadius;
+    hrRadius  = 0.66 * secRadius;
+    monthRadius = 0.33 * secRadius;
+    faceRadius = secRadius + 2 * monthRadius;
+
+
+    s.translate(s.width/2,s.height/2); // origin is center
+    s.rotate(-1/2 * Math.PI); // all angles measured from 12 o'clock
+    s.ellipseMode(s.RADIUS);
+    s.noFill();
+    //s.background(0);
+
+    drawWatchFace();
+    drawGrid();
+    drawMonthGrid();
 
   };
 
+
+
   s.draw = function() {
-
-    s.clear();
-    renderTimePaths();
-
-    // make a seconds dot
-    let dateTime = new Date();
-    seconds.current = dateTime.getMilliseconds()/1000 + dateTime.getSeconds(); 
-    seconds.angle = seconds.current/60 * Math.PI * 2 + Math.PI/2;
-    seconds.x = center.x - seconds.radius * Math.cos(seconds.angle);
-    seconds.y = center.y - seconds.radius * Math.sin(seconds.angle);
-
-    // seconds triangle
-    s.push();
-    s.noStroke();
-    s.fill([0,150,150,50]);
-    s.triangle(
-      seconds.x,
-      seconds.y,
-      center.x,
-      center.y,
-      center.x,
-      center.y - seconds.radius
-    );
-    s.pop();
-
-    s.push();
-    s.fill([255,0,0,100]);
-    s.ellipse(
-      seconds.x,
-      seconds.y,
-      5,
-      5
-    );
-    s.pop();
-
-    // minutes
-    minutes.current = seconds.current/60 + dateTime.getMinutes();
-    minutes.angle = minutes.current/60 * Math.PI * 2 + Math.PI/2;
-    minutes.x = center.x - minutes.radius * Math.cos(minutes.angle);
-    minutes.y = center.y - minutes.radius * Math.sin(minutes.angle);
-
-
-    // we want the line to go through the top of
-    // the sundial (aka "noon")
-    minutes.dyNoon = center.y - minutes.y;
-    minutes.dxNoon = center.x - minutes.x;
-    minutes.angleNoon =  Math.atan2( minutes.dyNoon, minutes.dxNoon);
-
-    s.push();
-    s.noStroke();
-    s.fill([255,255,100,100]);
-    s.triangle(
-      minutes.x,
-      minutes.y,
-      center.x,
-      center.y,
-      s.width,
-      0
-    );
-    s.pop();
-
-    s.push();
-    s.fill([255,0,0,100]);
-    s.ellipse(
-      minutes.x,
-      minutes.y,
-      5,
-      5
-    );
-    s.pop();
-
-    // hours
-    hours.current = minutes.current/60 + dateTime.getHours();
-    hours.angle = hours.current/12 * Math.PI * 2 + Math.PI/2;
-    hours.x = center.x - hours.radius * Math.cos(hours.angle);
-    hours.y = center.y - hours.radius * Math.sin(hours.angle);
-
-    s.push();
-    s.noStroke();
-    s.fill([100,255,100,100]);
-    s.triangle(
-      hours.x,
-      hours.y,
-      center.x,
-      center.y,
-      minutes.x,
-      minutes.y
-    );
-    s.pop();
-
-    s.push();
-    s.fill([255,0,0,100]);
-    s.ellipse(
-      hours.x,
-      hours.y,
-      5,
-      5
-    );
-    s.pop();
-
-
-
+    s.background(0);
+    drawWatchFace();
+    renderTime();
+    drawGrid();
+    drawMonthGrid();
   };
 
   s.windowResized = function() {
