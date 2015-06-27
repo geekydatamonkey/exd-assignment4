@@ -8,7 +8,7 @@ const $ = require('jquery');
 
 let secRadius,
     minRadius,
-    hrRadius,
+    gearRadius,
     monthRadius,
     faceRadius,
     datetime,
@@ -21,9 +21,8 @@ let colors = {
   min: '#3f5765',
   hr: '#2b3a42',
   tri: [255, 83, 13, 240],
-  grid: '#3f5765',
+  grid: [240,240,240,50],
   bg: '#efefef'
- // bg: '#bdd4de'
 };
 
 function mySketch(s) {
@@ -43,6 +42,7 @@ function mySketch(s) {
   function drawGrid() {
 
     s.push();
+
     s.noFill();
     s.stroke(colors.grid);
 
@@ -53,7 +53,7 @@ function mySketch(s) {
     // minutes, seconds, and hour circles
     s.ellipse(0, 0, secRadius, secRadius);
     s.ellipse(0, 0, minRadius, minRadius);
-    s.ellipse(0, 0, hrRadius, hrRadius);
+    s.ellipse(0, 0, gearRadius, gearRadius);
 
     // line for every hour
     s.push();
@@ -68,8 +68,8 @@ function mySketch(s) {
     s.rotate(3 * secs/60 * 2 * Math.PI);
     s.beginShape();
     for (let i=0; i <= 360; i += 30) {
-      let x = hrRadius * Math.cos(i/180 * Math.PI);
-      let y = hrRadius * Math.sin(i/180 * Math.PI);
+      let x = gearRadius * Math.cos(i/180 * Math.PI);
+      let y = gearRadius * Math.sin(i/180 * Math.PI);
       s.vertex(x,y);
     }
     s.endShape();
@@ -80,8 +80,8 @@ function mySketch(s) {
     s.rotate(-3 * secs/60 * 2 * Math.PI);
     s.beginShape();
     for (let i=0; i <= 360; i += 60) {
-      let x = hrRadius * Math.cos(i/180 * Math.PI);
-      let y = hrRadius * Math.sin(i/180 * Math.PI);
+      let x = gearRadius * Math.cos(i/180 * Math.PI);
+      let y = gearRadius * Math.sin(i/180 * Math.PI);
       s.vertex(x,y);
     }
     s.endShape();
@@ -97,7 +97,7 @@ function mySketch(s) {
     let y = (secRadius + monthRadius) * Math.sin(Math.PI/180 * 45);
 
     s.translate(x, y);
-    s.rotate(secs/60 * Math.PI * 2);
+    s.rotate(secs/30 * Math.PI * 2);
     s.ellipse(0, 0, monthRadius, monthRadius);
 
     // square inside
@@ -128,11 +128,6 @@ function mySketch(s) {
     hrs = 9;
 
     // keep grid somewhat mysterious
-    if (mins <= 30) {
-      colors.grid = colors.min;
-    } else {
-      colors.grid = colors.min;
-    }
 
     renderHours();
     renderSeconds();
@@ -146,6 +141,7 @@ function mySketch(s) {
     let hrY = faceRadius * Math.sin(Math.PI * 2 * hrs/12);
 
     s.push();
+    s.noStroke();
     s.fill(colors.tri);
     s.triangle(secX, secY, minX, minY, hrX, hrY);
     s.pop();
@@ -157,6 +153,8 @@ function mySketch(s) {
     s.fill(colors.hr);
     s.noStroke();
     s.arc(0, 0, faceRadius, faceRadius, 0, hrs/12 * Math.PI * 2, s.PIE);
+    s.fill(colors.bg);
+    s.ellipse(0, 0, secRadius, secRadius);
     s.pop();
 
   }
@@ -168,6 +166,8 @@ function mySketch(s) {
     s.fill(colors.min);
     s.noStroke();
     s.arc(0, 0, minRadius, minRadius, 0, mins/60 * Math.PI * 2, s.PIE);
+    s.fill(colors.bg);
+    s.ellipse(0, 0, gearRadius, gearRadius);
     s.pop();
   }
 
@@ -177,7 +177,9 @@ function mySketch(s) {
     s.push();
     s.fill(colors.sec);
     s.noStroke();
-    s.arc(0, 0, secRadius, secRadius, 0, secs/60 * Math.PI * 2, s.PIE);
+    s.arc(0, 0, secRadius, secRadius, 0, secs/60 * Math.PI * 2, s.PIE);s.fill(colors.bg);
+    s.fill(colors.bg);
+    s.ellipse(0, 0, minRadius, minRadius);
     s.pop();
   }
 
@@ -194,24 +196,20 @@ function mySketch(s) {
 
     secRadius = s.height/4;
     minRadius = 0.9 * secRadius;
-    hrRadius  = 0.66 * secRadius;
+    gearRadius  = 0.66 * secRadius;
     monthRadius = 0.33 * secRadius;
     faceRadius = secRadius + 2 * monthRadius;
-
 
     s.translate(s.width/2,s.height/2); // origin is center
     s.rotate(-1/2 * Math.PI); // all angles measured from 12 o'clock
     s.ellipseMode(s.RADIUS);
     s.noFill();
-    //s.background(0);
 
     drawWatchFace();
     drawGrid();
     drawMonthGrid();
 
   };
-
-
 
   s.draw = function() {
     s.background(0);
