@@ -16,7 +16,7 @@ function mySketch(s) {
   let minutes = {
     radius: 3 * rUnit
   };
-  let hour = {
+  let hours = {
     radius: 4 * rUnit
   };
 
@@ -26,10 +26,11 @@ function mySketch(s) {
     s.push();
     s.ellipseMode(s.RADIUS);
     s.noFill();
-    s.stroke(222);
+    s.stroke(244);
+    s.strokeWeight(3);
     s.ellipse(center.x, center.y, seconds.radius, seconds.radius);
     s.ellipse(center.x, center.y, minutes.radius, minutes.radius);
-    s.ellipse(center.x, center.y, hour.radius, hour.radius);
+    s.ellipse(center.x, center.y, hours.radius, hours.radius);
 
     // sundial line
     s.push();
@@ -41,7 +42,7 @@ function mySketch(s) {
     // horizontal
     s.push();
     s.strokeWeight(1);
-    s.line(center.x - hour.radius, center.y, center.x + hour.radius, center.y);
+    s.line(center.x - hours.radius, center.y, center.x + hours.radius, center.y);
     s.pop();
     s.pop();
   }
@@ -66,12 +67,12 @@ function mySketch(s) {
   s.draw = function() {
 
     s.clear();
-    //renderTimePaths();
+    renderTimePaths();
 
     // make a seconds dot
     let dateTime = new Date();
     seconds.current = dateTime.getMilliseconds()/1000 + dateTime.getSeconds(); 
-    seconds.angle = seconds.current/60 * Math.PI * 2 + Math.PI/2;;
+    seconds.angle = seconds.current/60 * Math.PI * 2 + Math.PI/2;
     seconds.x = center.x - seconds.radius * Math.cos(seconds.angle);
     seconds.y = center.y - seconds.radius * Math.sin(seconds.angle);
 
@@ -101,7 +102,6 @@ function mySketch(s) {
 
     // minutes
     minutes.current = seconds.current/60 + dateTime.getMinutes();
-    console.log(minutes.current);
     minutes.angle = minutes.current/60 * Math.PI * 2 + Math.PI/2;
     minutes.x = center.x - minutes.radius * Math.cos(minutes.angle);
     minutes.y = center.y - minutes.radius * Math.sin(minutes.angle);
@@ -121,8 +121,8 @@ function mySketch(s) {
       minutes.y,
       center.x,
       center.y,
-      center.x, 
-      center.y - minutes.radius
+      s.width,
+      0
     );
     s.pop();
 
@@ -135,6 +135,36 @@ function mySketch(s) {
       5
     );
     s.pop();
+
+    // hours
+    hours.current = minutes.current/60 + dateTime.getHours();
+    hours.angle = hours.current/12 * Math.PI * 2 + Math.PI/2;
+    hours.x = center.x - hours.radius * Math.cos(hours.angle);
+    hours.y = center.y - hours.radius * Math.sin(hours.angle);
+
+    s.push();
+    s.noStroke();
+    s.fill([100,255,100,100]);
+    s.triangle(
+      hours.x,
+      hours.y,
+      center.x,
+      center.y,
+      minutes.x,
+      minutes.y
+    );
+    s.pop();
+
+    s.push();
+    s.fill([255,0,0,100]);
+    s.ellipse(
+      hours.x,
+      hours.y,
+      5,
+      5
+    );
+    s.pop();
+
 
 
   };
